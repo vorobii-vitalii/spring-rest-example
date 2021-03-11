@@ -6,8 +6,7 @@ import org.springframework.hateoas.RepresentationModel;
 
 @Data
 @Builder
-public class FavorOrderDTO extends RepresentationModel<FavorOrderDTO> {
-    private Long userId;
-    private Long favorId;
+public class FavorDTO extends RepresentationModel<FavorDTO> {
+    private Long id;
     private String description;
 }

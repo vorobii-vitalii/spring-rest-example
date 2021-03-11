@@ -8,6 +8,6 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor
 public class Favor {
-    private final Long id;
-    private final String description;
+    private Long id;
+    private String description;
 }

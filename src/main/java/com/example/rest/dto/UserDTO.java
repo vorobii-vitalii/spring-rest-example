@@ -1,19 +1,17 @@
-package com.example.rest.entity;
+package com.example.rest.dto;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.RepresentationModel;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Builder
 @Data
 @RequiredArgsConstructor
-public class User {
+public class UserDTO extends RepresentationModel<UserDTO> {
     private Long id;
     private Map<String, String> properties = new HashMap<>();
-    private List<FavorOrder> favorOrders = new ArrayList<>();
 }

@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 @Data
 public class FavorOrder {
     private Long id;
-    private final Favor favor;
-    private final User orderedBy;
+    private Favor favor;
+    private User orderedBy;
     private String status;
     private String description;
 }

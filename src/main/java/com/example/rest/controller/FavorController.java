@@ -1,16 +1,27 @@
 package com.example.rest.controller;
 
 import com.example.rest.StatusType;
+import com.example.rest.dto.FavorDTO;
 import com.example.rest.dto.FavorOrderDTO;
 import com.example.rest.entity.Favor;
 import com.example.rest.entity.FavorOrder;
 import com.example.rest.service.FavorOrderService;
 import com.example.rest.service.FavorService;
+import com.example.rest.utils.Mapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.text.html.Option;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/favors")
@@ -18,29 +29,49 @@ import java.util.List;
 public class FavorController {
     private final FavorService favorService;
     private final FavorOrderService favorOrderService;
+    private final Mapper<Favor, FavorDTO> favorDTOMapper;
+    private final Mapper<FavorOrder, FavorOrderDTO> favorOrderDTOMapper;
 
     @GetMapping
-    public ResponseEntity<List<Favor>> getAllFavors() {
+    public CollectionModel<FavorDTO> getAllFavors() {
         var favors = favorService.getAllFavors();
 
-        return ResponseEntity.ok(favors);
+        var favorDTOs = favors.stream()
+                .map(favorDTOMapper::to)
+                .map(FavorController::attachFavorLink)
+                .collect(Collectors.toList());
+
+        var getAllFavorLink = linkTo(
+                methodOn(FavorController.class)
+                    .getAllFavors())
+                .withSelfRel();
+
+        return CollectionModel.of(favorDTOs, getAllFavorLink);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Favor> getFavorDetailsById(@PathVariable(name = "id") Long id) {
-        var favor = favorService.getFavorById(id);
+    public CollectionModel<FavorDTO> getFavorDetailsById(@PathVariable(name = "id") Long id) {
 
-        return ResponseEntity.ok(favor);
+        var favorDTO =
+                Optional.ofNullable(favorService.getFavorById(id))
+                    .map(favorDTOMapper::to)
+                    .map(FavorController::attachFavorLink)
+                .orElse(null);
+
+        var getAllFavorLink = linkTo(methodOn(FavorController.class)
+                .getAllFavors()).withSelfRel();
+
+        return CollectionModel.of(Collections.singletonList(favorDTO), getAllFavorLink);
     }
 
     @PostMapping("/orders")
-    public ResponseEntity<FavorOrder> createFavorOrder(
+    public ResponseEntity<FavorOrderDTO> createFavorOrder(
             @RequestBody FavorOrderDTO favorOrderDTO
     ) {
         var savedFavorOrder =
                 favorOrderService.addNewFavorOrder(favorOrderDTO);
 
-        return ResponseEntity.ok(savedFavorOrder);
+        return ResponseEntity.ok(favorOrderDTOMapper.to(savedFavorOrder));
     }
 
     @GetMapping("/orders/{favorOrderId}/status")
@@ -80,6 +111,15 @@ public class FavorController {
                 );
 
         return ResponseEntity.ok(message);
+    }
+
+    private static FavorDTO attachFavorLink(FavorDTO favorDTO) {
+        var favorSelfLink = linkTo(
+                methodOn(FavorController.class)
+                        .getFavorDetailsById(favorDTO.getId()))
+                .withSelfRel();
+        favorDTO.add(favorSelfLink);
+        return favorDTO;
     }
 
 
