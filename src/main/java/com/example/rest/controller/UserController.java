@@ -6,9 +6,12 @@ import com.example.rest.entity.User;
 import com.example.rest.service.UserService;
 import com.example.rest.utils.Mapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -22,7 +25,7 @@ public class UserController {
     private final Mapper<User, UserDTO> userDTOMapper;
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUserDetails(@PathVariable("id") Long id) {
+    public CollectionModel<UserDTO> getUserDetails(@PathVariable("id") Long id) {
         var userDTO =
                 Optional
                     .ofNullable(userService.getUserById(id))
@@ -30,7 +33,9 @@ public class UserController {
                     .map(UserController::attachFavorLink)
                 .orElseThrow();
 
-        return ResponseEntity.ok(userDTO);
+        Link link = linkTo(UserController.class).withSelfRel();
+
+        return CollectionModel.of(Collections.singletonList(userDTO), link);
     }
 
     @PostMapping("/{id}/attributes/{attributeName}")
